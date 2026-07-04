@@ -19,7 +19,7 @@
 
 ## The Story
 
-You have a question. You need a well-researched, polished article — not a messy pile of search tabs and half-read links.
+You have a question. You need a well-researched, polished article and not a messy pile of search tabs and half-read links.
 
 FlowSynth is your **AI research team in a box**. It doesn't just search the web and dump results. It orchestrates six specialised AI agents that work together like a tiny editorial department:
 
@@ -30,7 +30,7 @@ FlowSynth is your **AI research team in a box**. It doesn't just search the web 
 → A **critic** reviews the work (and sends it back if it's not good enough).  
 → A **finalizer** polishes the final draft.
 
-All of this happens automatically, in about a minute — and it costs exactly **zero dollars**.
+All of this happens automatically, in about a minute and it costs exactly **zero dollars**.
 
 ---
 
@@ -88,7 +88,7 @@ All of this happens automatically, in about a minute — and it costs exactly **
 | 5 | **Reviewer** | Scores the draft (1–10) on accuracy, completeness, structure, and clarity. Returns feedback + verdict. |
 | 6 | **Finalizer** | Polishes the final draft, adds a summary, ensures clean formatting. |
 
-The review loop runs up to **3 revision cycles** — if the critic isn't satisfied, the writer goes back to work with specific feedback. Once the score hits 7+ or max revisions are reached, the finalizer takes over.
+The review loop runs up to **3 revision cycles**; if the critic isn't satisfied, the writer goes back to work with specific feedback. Once the score hits 7+ or max revisions are reached, the finalizer takes over.
 
 ---
 

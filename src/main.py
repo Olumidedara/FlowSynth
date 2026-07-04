@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 
 from src.config import settings
 from src.auth import router as auth_router, get_current_user
-from src.database import init_db, create_research, update_research, get_research_history, get_research_by_id, get_research_by_task_id, get_latest_research, delete_research
+from src.database import init_db, close_db, create_research, update_research, get_research_history, get_research_by_id, get_research_by_task_id, get_latest_research, delete_research
 from src.workflow.graph import flowsynth_graph
 from src.workflow.progress import clear_stage
 
@@ -80,26 +80,30 @@ async def run_workflow(task_id: str, query: str, research_id: int | None = None)
             tasks[task_id] = {"status": "completed", "result": r}
 
         if research_id:
-            update_research(research_id, "completed", r)
+            await update_research(research_id, "completed", r)
 
     except asyncio.TimeoutError:
         clear_stage(task_id)
         async with _lock:
             tasks[task_id] = {"status": "failed", "error": "Pipeline timed out after 120s"}
         if research_id:
-            update_research(research_id, "failed")
+            await update_research(research_id, "failed")
 
     except Exception as e:
         clear_stage(task_id)
         async with _lock:
             tasks[task_id] = {"status": "failed", "error": str(e)}
         if research_id:
-            update_research(research_id, "failed")
+            await update_research(research_id, "failed")
 
 
 @app.on_event("startup")
 async def startup():
-    init_db()
+    await init_db()
+
+@app.on_event("shutdown")
+async def shutdown():
+    await close_db()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -114,10 +118,10 @@ async def index(request: Request):
 @app.post("/api/research")
 async def start_research(query: str = Form(...), request: Request = None):
     task_id = str(uuid.uuid4())
-    user = get_current_user(request)
+    user = await get_current_user(request)
     research_id = None
     if user:
-        research_id = create_research(user["id"], query, task_id)
+        research_id = await create_research(user["id"], query, task_id)
 
     async with _lock:
         tasks[task_id] = {"status": "running"}
@@ -147,9 +151,9 @@ async def get_result(task_id: str, request: Request = None):
             return {"status": task["status"], "stage": stage}
         return task["result"]
     # DB fallback for historical results
-    user = get_current_user(request)
+    user = await get_current_user(request)
     if user:
-        row = get_research_by_task_id(task_id, user["id"])
+        row = await get_research_by_task_id(task_id, user["id"])
         if row and row.get("result"):
             return row["result"]
     return JSONResponse(status_code=404, content={"status": "not_found"})
@@ -166,19 +170,19 @@ async def result_page(request: Request, task_id: str):
 
 @app.get("/api/history")
 async def history(request: Request):
-    user = get_current_user(request)
+    user = await get_current_user(request)
     if not user:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    rows = get_research_history(user["id"])
+    rows = await get_research_history(user["id"])
     return {"history": rows}
 
 
 @app.get("/api/research/{research_id}")
 async def get_saved_research(research_id: int, request: Request):
-    user = get_current_user(request)
+    user = await get_current_user(request)
     if not user:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    row = get_research_by_id(research_id, user["id"])
+    row = await get_research_by_id(research_id, user["id"])
     if not row:
         return JSONResponse(status_code=404, content={"error": "Research not found"})
     return row
@@ -201,10 +205,10 @@ async def signup_page(request: Request):
 
 @app.delete("/api/research/{research_id}")
 async def delete_saved_research(research_id: int, request: Request):
-    user = get_current_user(request)
+    user = await get_current_user(request)
     if not user:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    deleted = delete_research(research_id, user["id"])
+    deleted = await delete_research(research_id, user["id"])
     if not deleted:
         return JSONResponse(status_code=404, content={"error": "Research not found"})
     return {"ok": True}

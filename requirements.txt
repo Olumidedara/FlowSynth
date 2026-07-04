@@ -11,3 +11,4 @@ aiofiles>=24.1.0
 httpx>=0.28.0
 markdown>=3.10.0
 pyjwt>=2.0.0
+asyncpg>=0.30.0

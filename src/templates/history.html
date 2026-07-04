@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History — FlowSynth</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <style>
+        :root {
+            --bg: #07070d;
+            --bg-card: rgba(18, 18, 26, 0.7);
+            --bg-card-solid: #12121a;
+            --text: #e0e0e0;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --border: rgba(255,255,255,0.06);
+            --accent: #7c5cfc;
+            --accent-blue: #60a5fa;
+            --success: #34d399;
+            --error-text: #f87171;
+            --pending: #fbbf24;
+        }
+        [data-theme="light"] {
+            --bg: #f5f0ff;
+            --bg-card: rgba(255,255,255,0.85);
+            --bg-card-solid: #ffffff;
+            --text: #1a1a2e;
+            --text-secondary: #555;
+            --text-muted: #888;
+            --border: rgba(124,92,252,0.1);
+            --accent: #7c5cfc;
+            --accent-blue: #4b8bef;
+            --success: #059669;
+            --error-text: #dc2626;
+            --pending: #d97706;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124,92,252,0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 20% 80%, rgba(96,165,250,0.06), transparent);
+            transition: background 0.3s, color 0.3s;
+        }
+        .container { max-width: 720px; width: 100%; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .icon-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.45rem 0.7rem;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text);
+            backdrop-filter: blur(10px);
+            transition: background 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .icon-btn:hover { background: var(--bg-card-solid); }
+        .icon-btn.label-btn { font-size: 0.8rem; gap: 0.35rem; padding: 0.45rem 0.9rem; }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 0;
+            color: var(--text-muted);
+        }
+        .empty-state p { font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .empty-state .sub { font-size: 0.82rem; }
+
+        .research-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color 0.2s, transform 0.15s;
+        }
+        .research-item:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+        .research-info { flex: 1; min-width: 0; }
+        .research-query {
+            font-weight: 500;
+            font-size: 0.92rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.2rem;
+        }
+        .research-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .status-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+        .status-completed { background: rgba(52,211,153,0.12); color: var(--success); }
+        .status-running { background: rgba(251,191,36,0.12); color: var(--pending); }
+        .status-failed { background: rgba(248,113,113,0.12); color: var(--error-text); }
+
+        #loading {
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 1.25rem 1rem; }
+            .research-item { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-row">
+            <a href="/" class="logo"><span class="logo-text">FlowSynth</span></a>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" onclick="toggleTheme()">🌙</button>
+                <a href="/#research" class="icon-btn label-btn">New Research</a>
+                <button class="icon-btn label-btn" id="signOutBtn" onclick="signOut()">Sign Out</button>
+            </div>
+        </div>
+
+        <h1>Research History</h1>
+
+        <div id="not-signed-in" class="empty-state" style="display:none;">
+            <p>Sign in to view your research history</p>
+            <div class="sub" style="margin-top:0.8rem;display:flex;gap:0.6rem;justify-content:center;">
+                <a href="/auth/signin?next=/history" style="color:var(--accent);text-decoration:none;font-weight:500;">Sign In</a>
+                <a href="/auth/signup?next=/history" style="color:var(--accent);text-decoration:none;font-weight:500;">Sign Up</a>
+            </div>
+        </div>
+
+        <div id="loading" style="display:none;">Loading...</div>
+        <div id="empty-state" class="empty-state" style="display:none;">
+            <p>No research yet</p>
+            <div class="sub"><a href="/" style="color:var(--accent);text-decoration:none;">Start your first research</a></div>
+        </div>
+        <div id="list"></div>
+    </div>
+
+    <script>
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const saved = localStorage.getItem('flowsynth-theme') || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', saved);
+        document.getElementById('themeToggle').textContent = saved === 'dark' ? '🌙' : '☀️';
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('flowsynth-theme', next);
+            document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+        }
+
+        function signOut() {
+            localStorage.removeItem('flowsynth-token');
+            localStorage.removeItem('flowsynth-email');
+            window.location.href = '/auth/signin';
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.appendChild(document.createTextNode(text || ''));
+            return d.innerHTML;
+        }
+
+        function formatDate(d) {
+            try {
+                const dt = new Date(d + 'Z');
+                return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch { return d; }
+        }
+
+        async function loadHistory() {
+            const token = localStorage.getItem('flowsynth-token');
+            if (!token) {
+                document.getElementById('not-signed-in').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const resp = await fetch('/api/history', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                document.getElementById('loading').style.display = 'none';
+                if (resp.status === 401) {
+                    localStorage.removeItem('flowsynth-token');
+                    document.getElementById('not-signed-in').style.display = 'block';
+                    return;
+                }
+                const data = await resp.json();
+
+                if (!data.history || data.history.length === 0) {
+                    document.getElementById('empty-state').style.display = 'block';
+                    return;
+                }
+
+                const list = document.getElementById('list');
+                list.innerHTML = data.history.map(item => {
+                    const linkId = item.task_id || String(item.id);
+                    return '<a href="/result/' + escapeHtml(linkId) + '?rid=' + escapeHtml(String(item.id)) + '" class="research-item">' +
+                    '<div class="research-info">' +
+                    '<div class="research-query">' + escapeHtml(item.query) + '</div>' +
+                    '<div class="research-meta">' + formatDate(item.created_at) + '</div>' +
+                    '</div>' +
+                    '<span class="status-badge status-' + escapeHtml(item.status) + '">' + escapeHtml(item.status) + '</span>' +
+                    '</a>';
+                }).join('');
+
+                const email = localStorage.getItem('flowsynth-email');
+                if (email) {
+                    document.querySelector('.header-actions').insertAdjacentHTML('afterbegin',
+                        '<span style="font-size:0.8rem;color:var(--text-muted);">' + escapeHtml(email) + '</span>'
+                    );
+                }
+            } catch {
+                document.getElementById('loading').textContent = 'Failed to load history.';
+            }
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>

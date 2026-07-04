@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result — FlowSynth</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+        :root {
+            --bg: #07070d;
+            --bg-sidebar: rgba(14,14,22,0.55);
+            --bg-panel: rgba(18,18,26,0.6);
+            --bg-panel-solid: #12121a;
+            --bg-tab-bar: rgba(10,10,16,0.35);
+            --bg-input: rgba(10,10,15,0.45);
+            --text: #ededf2;
+            --text-secondary: #9d9db0;
+            --text-tertiary: #6a6a7e;
+            --border: rgba(255,255,255,0.04);
+            --border-hover: rgba(255,255,255,0.08);
+            --border-focus: rgba(124,92,252,0.5);
+            --glow-subtle: rgba(124,92,252,0.06);
+            --glow-medium: rgba(124,92,252,0.12);
+            --accent: #7c5cfc;
+            --accent-hover: #6a4ae8;
+            --accent-light: #9b7eff;
+            --blue: #60a5fa;
+            --green: #34d399;
+            --red: #f87171;
+            --article-text: #d0d0da;
+            --article-strong: #f0f0f5;
+            --article-code-bg: rgba(124,92,252,0.06);
+            --article-pre-bg: rgba(0,0,0,0.25);
+            --article-blockquote-bg: rgba(124,92,252,0.03);
+            --article-th-bg: rgba(255,255,255,0.02);
+            --article-border: rgba(255,255,255,0.05);
+            --error-bg: rgba(127,29,29,0.12);
+            --error-border: rgba(127,29,29,0.25);
+            --error-text: #f87171;
+            --sidebar-hover: rgba(124,92,252,0.05);
+            --sidebar-active: rgba(124,92,252,0.08);
+            --step-color: #555;
+            --step-dot: #333;
+            --step-active-dot: #7c5cfc;
+            --step-done-dot: #34d399;
+            --step-active-text: #c0b0f0;
+            --step-done-text: #6ee7b7;
+        }
+        [data-theme="light"] {
+            --bg: #eee8fd;
+            --bg-sidebar: rgba(245,240,255,0.6);
+            --bg-panel: rgba(255,255,255,0.75);
+            --bg-panel-solid: #ffffff;
+            --bg-tab-bar: rgba(240,235,255,0.5);
+            --bg-input: rgba(240,235,255,0.5);
+            --text: #1a1a2e;
+            --text-secondary: #5e5e78;
+            --text-tertiary: #9a9ab2;
+            --border: rgba(124,92,252,0.07);
+            --border-hover: rgba(124,92,252,0.14);
+            --border-focus: rgba(124,92,252,0.4);
+            --glow-subtle: rgba(124,92,252,0.06);
+            --glow-medium: rgba(124,92,252,0.15);
+            --accent: #7c5cfc;
+            --accent-hover: #6a4ae8;
+            --accent-light: #8b6cff;
+            --blue: #4b8bef;
+            --green: #059669;
+            --red: #dc2626;
+            --article-text: #3a3a4e;
+            --article-strong: #1a1a2e;
+            --article-code-bg: rgba(124,92,252,0.05);
+            --article-pre-bg: rgba(0,0,0,0.02);
+            --article-blockquote-bg: rgba(124,92,252,0.03);
+            --article-th-bg: rgba(124,92,252,0.03);
+            --article-border: rgba(124,92,252,0.08);
+            --error-bg: rgba(239,68,68,0.06);
+            --error-border: rgba(239,68,68,0.15);
+            --error-text: #dc2626;
+            --sidebar-hover: rgba(124,92,252,0.04);
+            --sidebar-active: rgba(124,92,252,0.07);
+            --step-color: #666;
+            --step-dot: #bbb;
+            --step-active-dot: #7c5cfc;
+            --step-done-dot: #059669;
+            --step-active-text: #5b3cc4;
+            --step-done-text: #059669;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh;
+            transition: background 0.4s ease, color 0.4s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+        .app-layout { display: flex; min-height: 100vh; }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 280px; flex-shrink: 0;
+            background: var(--bg-sidebar); border-right: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            display: flex; flex-direction: column;
+            padding: 0;
+            position: sticky; top: 0; height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 1.25rem 1rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .sidebar-logo {
+            font-size: 1rem; font-weight: 700; letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent), var(--blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            text-decoration: none;
+        }
+        .sidebar-actions { display: flex; gap: 0.35rem; }
+        .sidebar-btn {
+            background: none; border: 1px solid var(--border); border-radius: 8px;
+            padding: 0.3rem 0.45rem; cursor: pointer; font-size: 0.85rem;
+            color: var(--text-tertiary); transition: all 0.2s;
+            text-decoration: none; display: inline-flex;
+        }
+        .sidebar-btn:hover { background: var(--sidebar-hover); color: var(--text-secondary); border-color: var(--border-hover); }
+        .sidebar-btn.active-theme { border-color: var(--border-focus); }
+        .sidebar-search {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sidebar-search input {
+            width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+            border-radius: 9px; padding: 0.45rem 0.75rem; color: var(--text);
+            font-size: 0.78rem; font-family: inherit; outline: none;
+            transition: all 0.2s;
+        }
+        .sidebar-search input:focus { border-color: var(--border-focus); }
+        .sidebar-search input::placeholder { color: var(--text-tertiary); }
+        .sidebar-list {
+            flex: 1; overflow-y: auto; padding: 0.4rem 0;
+        }
+        .sidebar-list::-webkit-scrollbar { width: 3px; }
+        .sidebar-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 2px; }
+        .history-item {
+            display: block; padding: 0.6rem 1rem; cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            text-decoration: none; color: inherit;
+        }
+        .history-item:hover { background: var(--sidebar-hover); }
+        .history-item.active {
+            background: var(--sidebar-active);
+            border-left-color: var(--accent);
+        }
+        .history-item .h-query {
+            font-size: 0.82rem; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .history-item .h-meta {
+            font-size: 0.68rem; color: var(--text-tertiary); margin-top: 0.15rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .h-badge {
+            font-size: 0.6rem; font-weight: 600; padding: 0.1rem 0.4rem; border-radius: 4px;
+        }
+        .h-badge.completed { background: rgba(52,211,153,0.08); color: var(--green); }
+        .h-badge.running { background: rgba(251,191,36,0.08); color: #fbbf24; }
+        .h-badge.failed { background: rgba(248,113,113,0.08); color: var(--red); }
+        .sidebar-footer {
+            padding: 0.75rem 1rem; border-top: 1px solid var(--border);
+            font-size: 0.72rem; color: var(--text-tertiary); flex-shrink: 0;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .sidebar-footer a { color: var(--accent-light); text-decoration: none; }
+        .sidebar-footer a:hover { color: var(--accent); }
+        .del-btn {
+            background: none; border: none; color: var(--text-tertiary); cursor: pointer;
+            font-size: 1rem; line-height: 1; padding: 0 0 0 0.35rem; opacity: 0;
+            transition: all 0.15s;
+        }
+        .history-item:hover .del-btn { opacity: 0.5; }
+        .del-btn:hover { opacity: 1 !important; color: var(--red) !important; }
+        .sidebar-loading {
+            padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.8rem;
+        }
+
+        /* --- Main --- */
+        .main-content {
+            flex: 1; min-width: 0;
+            display: flex; flex-direction: column;
+            padding: 1.5rem 2rem 4rem;
+        }
+        .main-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .main-header h1 {
+            font-size: 1.1rem; font-weight: 600; color: var(--text-secondary);
+        }
+        .main-header .back-link {
+            font-size: 0.8rem; color: var(--text-tertiary); text-decoration: none;
+            padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .main-header .back-link:hover { color: var(--text-secondary); border-color: var(--border-hover); }
+
+        #loading { text-align: center; padding: 6rem 0; animation: fadeUp 0.4s ease-out; }
+        .spinner-ring { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(124,92,252,0.06); border-top-color: var(--accent); border-right-color: var(--blue); animation: spin 0.9s cubic-bezier(0.4,0,0.2,1) infinite; margin: 0 auto 1.25rem; box-shadow: 0 0 32px var(--glow-subtle); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        #loading p { color: var(--text-tertiary); font-size: 0.85rem; }
+        #stage-label { color: var(--accent-light); font-size: 0.9rem; margin-top: 0.6rem; font-weight: 500; min-height: 1.3em; }
+        #result { display: none; animation: fadeIn 0.5s ease-out; }
+
+        /* Pipeline steps */
+        .pipeline-steps {
+            display: flex; align-items: center; justify-content: center; gap: 0;
+            margin: 0 auto 2rem; flex-wrap: wrap;
+        }
+        .step {
+            display: flex; align-items: center; padding: 0.35rem 0.6rem; border-radius: 8px;
+            font-size: 0.72rem; color: var(--step-color); font-weight: 500;
+            letter-spacing: 0.01em; white-space: nowrap; transition: all 0.4s ease;
+        }
+        .step-arrow { color: var(--text-tertiary); font-size: 0.85rem; margin: 0 0.1rem; opacity: 0.3; }
+        .step-dot {
+            width: 8px; height: 8px; border-radius: 50%; margin-right: 0.4rem;
+            background: var(--step-dot); transition: all 0.4s ease; flex-shrink: 0;
+        }
+        .step.active .step-dot { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+        .step.active { color: var(--text); }
+        .step.done .step-dot { background: var(--blue); box-shadow: 0 0 12px var(--blue); }
+        .step.done { color: var(--text-secondary); }
+        .error-box { background: var(--error-bg); border: 1px solid var(--error-border); border-radius: 14px; padding: 1.1rem 1.3rem; color: var(--error-text); margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.6; }
+        .meta { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; animation: fadeIn 0.4s ease-out; }
+        .meta-item { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 0.4rem 0.9rem; font-size: 0.8rem; color: var(--text-secondary); backdrop-filter: blur(10px); }
+        .meta-item strong { color: var(--text); }
+        .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 5px; font-size: 0.7rem; font-weight: 600; }
+        .badge-pass { background: rgba(52,211,153,0.08); color: var(--green); }
+        .badge-revise { background: rgba(251,191,36,0.08); color: #fbbf24; }
+
+        .tabs { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; backdrop-filter: blur(20px); box-shadow: 0 8px 40px rgba(0,0,0,0.12); animation: fadeIn 0.5s ease-out; }
+        .tab-bar { display: flex; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--bg-tab-bar); gap: 0; padding: 0 0.25rem; }
+        .tab-bar::-webkit-scrollbar { height: 2px; }
+        .tab-bar::-webkit-scrollbar-track { background: transparent; }
+        .tab-bar::-webkit-scrollbar-thumb { background: var(--text-tertiary); border-radius: 2px; opacity: 0.3; }
+        .tab-btn { flex-shrink: 0; background: none; border: none; color: var(--text-tertiary); padding: 0.75rem 1.2rem; cursor: pointer; font-size: 0.8rem; font-family: inherit; border-bottom: 2px solid transparent; transition: all 0.2s; font-weight: 500; letter-spacing: 0.01em; }
+        .tab-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.02); }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(124,92,252,0.04); }
+        .tab-pane { display: none; padding: 1.75rem 2rem 2.5rem; }
+        .tab-pane.active { display: block; }
+        .pane-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+        .pane-header h3 { font-size: 0.8rem; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .copy-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-tertiary); padding: 0.3rem 0.8rem; border-radius: 7px; cursor: pointer; font-size: 0.7rem; font-family: inherit; transition: all 0.2s; }
+        .copy-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-secondary); border-color: var(--border-hover); }
+        .copy-btn.copied { background: rgba(52,211,153,0.08); color: var(--green); border-color: rgba(52,211,153,0.15); }
+        .article-body { font-size: 0.95rem; line-height: 1.9; color: var(--article-text); text-align: justify; word-wrap: break-word; }
+        .article-body h1 { font-size:1.25rem; font-weight:700; color:var(--text); margin:1.5rem 0 0.7rem; padding-bottom:0.3rem; border-bottom:1px solid var(--article-border); text-align:left; }
+        .article-body h2 { font-size:1.1rem; font-weight:600; color:var(--text); margin:1.2rem 0 0.5rem; text-align:left; }
+        .article-body h3 { font-size:1rem; font-weight:600; color:var(--text); margin:1rem 0 0.4rem; text-align:left; }
+        .article-body p { margin-bottom:0.9rem; }
+        .article-body ul, .article-body ol { margin:0.5rem 0 0.9rem; padding-left:1.5rem; }
+        .article-body li { margin-bottom:0.3rem; text-align:left; }
+        .article-body li p { margin-bottom:0.2rem; }
+        .article-body strong { color:var(--article-strong); font-weight:600; }
+        .article-body em { color:var(--text-secondary); font-style:italic; }
+        .article-body blockquote { border-left:3px solid var(--accent); padding:0.6rem 1.1rem; margin:0.8rem 0; background:var(--article-blockquote-bg); border-radius:0 8px 8px 0; color:var(--text-secondary); font-style:italic; }
+        .article-body code { font-family:'Cascadia Code','Fira Code','JetBrains Mono',Consolas,monospace; background:var(--article-code-bg); padding:0.15rem 0.4rem; border-radius:4px; font-size:0.88em; color:#a78bfa; }
+        .article-body pre { background:var(--article-pre-bg); border:1px solid var(--article-border); border-radius:10px; padding:1rem; overflow-x:auto; margin:0.8rem 0; }
+        .article-body pre code { background:none; padding:0; color:var(--article-text); font-size:0.85rem; }
+        .article-body hr { border:none; border-top:1px solid var(--article-border); margin:1.2rem 0; }
+        .article-body a { color:var(--accent-light); text-decoration:underline; text-underline-offset:2px; }
+        .article-body a:hover { color:#9b7efc; }
+        .article-body table { width:100%; border-collapse:collapse; margin:0.8rem 0; font-size:0.85rem; }
+        .article-body th, .article-body td { border:1px solid var(--article-border); padding:0.5rem 0.75rem; text-align:left; }
+        .article-body th { background:var(--article-th-bg); color:var(--text-secondary); font-weight:600; }
+        .article-body td { color:var(--article-text); }
+
+        @media (max-width: 800px) {
+            .sidebar { width: 220px; }
+            .main-content { padding: 1rem 1rem 3rem; }
+        }
+        @media (max-width: 640px) {
+            .sidebar { display: none; }
+            .main-content { padding: 0.75rem 0.75rem 3rem; }
+            .tab-pane { padding: 1.25rem; }
+            .article-body { font-size:0.92rem; }
+            .tab-btn { padding:0.6rem 0.85rem; font-size:0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">FlowSynth</a>
+                <div class="sidebar-actions">
+                    <button class="sidebar-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+                </div>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="searchInput" placeholder="Search research..." oninput="filterHistory(this.value)">
+            </div>
+            <div class="sidebar-list" id="sidebarList">
+                <div class="sidebar-loading">Loading history...</div>
+            </div>
+            <div class="sidebar-footer" id="sidebarFooter">
+                <a href="/#research">New research</a>
+                <div id="userBadge" style="display:flex;align-items:center;gap:0.4rem;"></div>
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div class="main-content">
+            <div class="main-header">
+                <h1 id="resultTitle">Research Result</h1>
+                <div style="display:flex;gap:0.5rem;align-items:center;">
+                    <button class="back-link" id="deleteBtn" onclick="deleteCurrent()" style="color:var(--error-text);border-color:rgba(248,113,113,0.2);">Delete</button>
+                    <a href="/#research" class="back-link">&larr; New</a>
+                </div>
+            </div>
+
+            <div id="loading">
+                <div class="pipeline-steps">
+                    <span class="step" data-step="0"><span class="step-dot"></span>Plan</span><span class="step-arrow">&rarr;</span>
+                    <span class="step" data-step="1"><span class="step-dot"></span>Research</span><span class="step-arrow">&rarr;</span>
+                    <span class="step" data-step="2"><span class="step-dot"></span>Analyze</span><span class="step-arrow">&rarr;</span>
+                    <span class="step" data-step="3"><span class="step-dot"></span>Write</span><span class="step-arrow">&rarr;</span>
+                    <span class="step" data-step="4"><span class="step-dot"></span>Review</span><span class="step-arrow">&rarr;</span>
+                    <span class="step" data-step="5"><span class="step-dot"></span>Finalize</span>
+                </div>
+                <div class="spinner-ring"></div>
+                <p id="loading-label">Running pipeline...</p>
+                <div id="stage-label"></div>
+            </div>
+
+            <div id="result">
+                <div id="error-container" class="error-box" style="display:none;"></div>
+                <div class="meta" id="meta-container"></div>
+                <div class="tabs" id="tabs-root">
+                    <div class="tab-bar" id="tab-bar"></div>
+                    <div id="tab-panes"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Theme ---
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const saved = localStorage.getItem('flowsynth-theme') || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', saved);
+        document.getElementById('themeToggle').textContent = saved === 'dark' ? '🌙' : '☀️';
+        function toggleTheme() {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('flowsynth-theme', next);
+            document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+        }
+
+        // --- Auth ---
+        const token = localStorage.getItem('flowsynth-token');
+        const email = localStorage.getItem('flowsynth-email');
+        if (token && email) {
+            document.getElementById('userBadge').innerHTML = '<span style="font-size:0.7rem;color:var(--text-muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + email + '</span><button onclick="signOut()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:0;text-decoration:underline;text-underline-offset:2px;">Sign out</button>';
+        } else {
+            document.getElementById('userBadge').innerHTML = '<a href="/auth/signin" style="color:var(--accent);text-decoration:none;font-size:0.72rem;">Sign in</a>';
+        }
+
+        function signOut() {
+            localStorage.removeItem('flowsynth-token');
+            localStorage.removeItem('flowsynth-email');
+            window.location.href = '/auth/signin?next=/';
+        }
+
+        // --- State ---
+        const currentTaskId = '{{ task_id }}';
+        let historyData = [];
+        let activeSidebarId = null;
+        let loadingResult = false;
+
+        // parse ?rid= from URL for sidebar highlight
+        const urlParams = new URLSearchParams(window.location.search);
+        const ridParam = urlParams.get('rid');
+        if (ridParam) activeSidebarId = parseInt(ridParam);
+
+        // --- Pipeline step helpers ---
+        const pipelineSteps = document.querySelectorAll('.pipeline-steps .step');
+        let currentStep = -1;
+
+        function getStepForStage(stage) {
+            const s = (stage || '').toLowerCase();
+            if (s.includes('plan')) return 0;
+            if (s.includes('research') || s.includes('search') || s.includes('gather') || s.includes('web')) return 1;
+            if (s.includes('analyz') || s.includes('findings')) return 2;
+            if (s.includes('writ') || s.includes('revising') || s.includes('revis')) return 3;
+            if (s.includes('review') || s.includes('qualit')) return 4;
+            if (s.includes('final')) return 5;
+            return -1;
+        }
+
+        function updateSteps(stage) {
+            const ns = getStepForStage(stage);
+            if (ns >= 0 && ns !== currentStep) {
+                currentStep = ns;
+                pipelineSteps.forEach((s, i) => {
+                    s.className = 'step';
+                    if (i < currentStep) s.classList.add('done');
+                    if (i === currentStep) s.classList.add('active');
+                });
+            }
+        }
+
+        // --- Render result ---
+        function escapeHtml(text) { const d = document.createElement('div'); d.appendChild(document.createTextNode(text||'')); return d.innerHTML; }
+
+        function copyPane(btn) {
+            const pane = btn.closest('.tab-pane');
+            const body = pane.querySelector('.article-body');
+            const text = body ? body.textContent : '';
+            navigator.clipboard.writeText(text).then(() => {
+                btn.classList.add('copied');
+                const orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
+            });
+        }
+
+        function renderResult(data, title) {
+            document.getElementById('loading').style.display = 'none';
+            const resultEl = document.getElementById('result');
+            resultEl.style.display = 'block';
+            if (title) document.getElementById('resultTitle').textContent = title;
+
+            document.getElementById('error-container').style.display = 'none';
+            if (data.errors && data.errors.length) {
+                const ec = document.getElementById('error-container');
+                ec.style.display = 'block';
+                ec.textContent = 'Warnings: ' + data.errors.join(', ');
+            }
+
+            const verdict = data.review_score >= 7 ? 'pass' : 'revise';
+            document.getElementById('meta-container').innerHTML =
+                '<div class="meta-item"><strong>Query:</strong> ' + escapeHtml(data.query) + '</div>' +
+                '<div class="meta-item"><strong>Quality:</strong> ' + data.review_score + '/10</div>' +
+                '<div class="meta-item"><strong>Verdict:</strong> <span class="badge badge-' + verdict + '">' + verdict + '</span></div>' +
+                '<div class="meta-item"><strong>Revisions:</strong> ' + data.revision_count + '</div>';
+
+            const tabs = [
+                { id:'final', label:'Final Output', html: data.final_output_html || escapeHtml(data.final_output) },
+                { id:'plan', label:'Research Plan', html: data.research_plan_html || escapeHtml(data.research_plan) },
+                { id:'analysis', label:'Analysis', html: data.analysis_html || escapeHtml(data.analysis) },
+                { id:'draft', label:'Draft', html: data.draft_html || escapeHtml(data.draft) },
+                { id:'feedback', label:'Reviewer Feedback', html: data.review_feedback_html || escapeHtml(data.review_feedback) },
+            ];
+
+            const bar = document.getElementById('tab-bar');
+            const panes = document.getElementById('tab-panes');
+            bar.innerHTML = ''; panes.innerHTML = '';
+
+            tabs.forEach((t, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+                btn.textContent = t.label;
+                btn.onclick = () => switchTab(i);
+                bar.appendChild(btn);
+                const pane = document.createElement('div');
+                pane.className = 'tab-pane' + (i === 0 ? ' active' : '');
+                pane.innerHTML = '<div class="pane-header"><h3>' + t.label + '</h3><button class="copy-btn" onclick="copyPane(this)">Copy</button></div><div class="article-body">' + t.html + '</div>';
+                panes.appendChild(pane);
+            });
+
+            function switchTab(idx) {
+                bar.querySelectorAll('.tab-btn').forEach((b, i) => b.className = 'tab-btn' + (i === idx ? ' active' : ''));
+                panes.querySelectorAll('.tab-pane').forEach((p, i) => p.className = 'tab-pane' + (i === idx ? ' active' : ''));
+            }
+        }
+
+        function renderError(msg) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('error-container').style.display = 'block';
+            document.getElementById('error-container').textContent = 'Error: ' + msg;
+            document.getElementById('meta-container').innerHTML = '';
+            document.getElementById('tab-bar').innerHTML = '';
+            document.getElementById('tab-panes').innerHTML = '';
+        }
+
+        // --- Load result by research_id ---
+        function loadResearch(id) {
+            if (loadingResult) return;
+            loadingResult = true;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading-label').textContent = 'Loading...';
+            document.getElementById('stage-label').textContent = '';
+            document.getElementById('result').style.display = 'none';
+
+            fetch('/api/research/' + id, {
+                headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+            }).then(r => r.json()).then(data => {
+                loadingResult = false;
+                if (data.error) { renderError(data.error); return; }
+                const result = data.result;
+                if (!result) { renderError('No result data found'); return; }
+                activeSidebarId = id;
+                updateSidebarActive(id);
+                renderResult(result, data.query);
+            }).catch(() => {
+                loadingResult = false;
+                renderError('Failed to load research');
+            });
+        }
+
+        // --- Poll initial result by task_id ---
+        function pollTask() {
+            const headers = {};
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            fetch('/api/result/' + currentTaskId, { headers }).then(r => r.json()).then(data => {
+                if (data.status === 'running' || data.status === 'not_ready') {
+                    if (data.stage) {
+                        document.getElementById('stage-label').textContent = data.stage;
+                        updateSteps(data.stage);
+                    }
+                    setTimeout(pollTask, 1500); return;
+                }
+                if (data.status === 'failed') {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('error-container').style.display = 'block';
+                    document.getElementById('error-container').textContent = 'Pipeline failed: ' + (data.error || 'Unknown error');
+                    return;
+                }
+                if (data.status === 'not_found') {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('error-container').style.display = 'block';
+                    document.getElementById('error-container').textContent = 'Result not found.';
+                    return;
+                }
+                // Completed result from in-memory or DB fallback
+                renderResult(data);
+            }).catch(() => setTimeout(pollTask, 1500));
+        }
+
+        // --- Delete ---
+        function deleteResearch(id) {
+            if (!confirm('Delete this research?')) return;
+            fetch('/api/research/' + id, {
+                method: 'DELETE',
+                headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+            }).then(r => {
+                if (r.ok) {
+                    if (activeSidebarId == id) {
+                        document.getElementById('result').style.display = 'none';
+                        document.getElementById('loading').style.display = 'none';
+                        document.getElementById('error-container').style.display = 'block';
+                        document.getElementById('error-container').textContent = 'Research deleted.';
+                    }
+                    loadSidebarHistory();
+                } else {
+                    alert('Failed to delete');
+                }
+            });
+        }
+
+        function deleteCurrent() {
+            if (activeSidebarId) deleteResearch(activeSidebarId);
+        }
+
+        // --- Sidebar History ---
+        function updateSidebarActive(id) {
+            document.querySelectorAll('.history-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.id == id);
+            });
+        }
+
+        function filterHistory(query) {
+            const q = query.toLowerCase();
+            document.querySelectorAll('.history-item').forEach(el => {
+                const text = (el.dataset.query || '').toLowerCase();
+                el.style.display = (!q || text.includes(q)) ? '' : 'none';
+            });
+        }
+
+        function loadSidebarHistory() {
+            if (!token) return;
+            fetch('/api/history', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).then(r => r.json()).then(data => {
+                const list = document.getElementById('sidebarList');
+                if (!data.history || data.history.length === 0) {
+                    list.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.78rem;">No research yet</div>';
+                    return;
+                }
+                historyData = data.history;
+                list.innerHTML = data.history.map(item => {
+                    const active = (activeSidebarId && activeSidebarId == item.id) ? ' active' : '';
+                    const date = item.created_at ? (() => { try { return new Date(item.created_at+'Z').toLocaleDateString(undefined,{month:'short',day:'numeric'}); } catch{return'';} })() : '';
+                    return '<div class="history-item' + active + '" data-id="' + item.id + '" data-query="' + escapeHtml(item.query) + '" onclick="loadResearch(' + item.id + ')">' +
+                        '<div class="h-query" style="display:flex;justify-content:space-between;align-items:center;">' +
+                        '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + escapeHtml(item.query) + '</span>' +
+                        '<button class="del-btn" onclick="event.stopPropagation();deleteResearch(' + item.id + ')" title="Delete">&times;</button>' +
+                        '</div>' +
+                        '<div class="h-meta"><span>' + date + '</span><span class="h-badge ' + item.status + '">' + item.status + '</span></div>' +
+                        '</div>';
+                }).join('');
+            }).catch(() => {
+                document.getElementById('sidebarList').innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.78rem;">Failed to load history</div>';
+            });
+        }
+
+        // --- Init ---
+        function renderHistoryView() {
+            document.getElementById('loading').style.display = 'none';
+            const resultEl = document.getElementById('result');
+            resultEl.style.display = 'block';
+            document.getElementById('error-container').style.display = 'block';
+            document.getElementById('meta-container').innerHTML = '';
+            document.getElementById('tab-bar').innerHTML = '';
+            document.getElementById('tab-panes').innerHTML = '';
+            document.getElementById('resultTitle').textContent = 'Research History';
+
+            if (!token) {
+                document.getElementById('error-container').innerHTML = 'Sign in to view your research history. <a href="/auth/signin?next=/history" style="color:var(--accent);text-decoration:underline;">Sign in</a> or <a href="/auth/signup?next=/history" style="color:var(--accent);text-decoration:underline;">create an account</a>.';
+                return;
+            }
+
+            document.getElementById('error-container').innerHTML = 'Select a research from the sidebar to view, or <a href="/#research" style="color:var(--accent);text-decoration:underline;">start new research</a>.';
+        }
+
+        if (currentTaskId && currentTaskId !== 'None' && currentTaskId !== '') {
+            pollTask();
+        } else {
+            renderHistoryView();
+        }
+
+        loadSidebarHistory();
+    </script>
+</body>
+</html>

@@ -85,4 +85,12 @@ def call_llm(
             "Set GEMINI_API_KEY in .env for automatic fallback."
         )
 
-    return _call_gemini(system_prompt, user_message, model, temperature)
+    try:
+        return _call_gemini(system_prompt, user_message, model, temperature)
+    except Exception as exc:
+        status = getattr(exc, "response", None) and getattr(exc.response, "status_code", None)
+        detail = f" (HTTP {status})" if status else ""
+        raise RuntimeError(
+            f"Gemini fallback also failed{detail}. "
+            "Check your GEMINI_API_KEY is valid at https://aistudio.google.com/apikey"
+        ) from exc

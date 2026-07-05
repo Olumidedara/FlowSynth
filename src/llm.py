@@ -1,6 +1,4 @@
-import httpx
-from groq import Groq
-from groq import RateLimitError
+from groq import Groq, RateLimitError
 
 from src.config import settings
 
@@ -17,12 +15,12 @@ def _get_groq() -> Groq:
 def _call_groq(
     system_prompt: str,
     user_message: str,
-    model: str | None = None,
+    model: str,
     temperature: float = 0.7,
 ) -> str:
     client = _get_groq()
     response = client.chat.completions.create(
-        model=model or settings.groq_model,
+        model=model,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
@@ -32,34 +30,13 @@ def _call_groq(
     return response.choices[0].message.content or ""
 
 
-def _call_gemini(
-    system_prompt: str,
-    user_message: str,
-    model: str | None = None,
-    temperature: float = 0.7,
-) -> str:
-    model_name = model or settings.gemini_model
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-
-    resp = httpx.post(
-        url,
-        params={"key": settings.gemini_api_key},
-        json={
-            "system_instruction": {"parts": [{"text": system_prompt}]},
-            "contents": [{"parts": [{"text": user_message}]}],
-            "generationConfig": {"temperature": temperature},
-        },
-        timeout=30.0,
-    )
-    resp.raise_for_status()
-    data = resp.json()
-
-    candidates = data.get("candidates", [])
-    if not candidates:
-        raise RuntimeError("Gemini returned no candidates")
-
-    parts = candidates[0].get("content", {}).get("parts", [])
-    return "".join(p.get("text", "") for p in parts)
+def _get_groq_models() -> list[str]:
+    models = [settings.groq_model]
+    if settings.groq_fallback_model:
+        models.append(settings.groq_fallback_model)
+    if settings.groq_fallback_model_2:
+        models.append(settings.groq_fallback_model_2)
+    return models
 
 
 def call_llm(
@@ -71,26 +48,30 @@ def call_llm(
     if not settings.groq_api_key:
         raise RuntimeError("GROQ_API_KEY is not set")
 
-    try:
-        return _call_groq(system_prompt, user_message, model, temperature)
-    except (RateLimitError, httpx.HTTPStatusError) as exc:
-        if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code not in (429, 502, 503):
-            raise
-    except Exception:
-        pass
+    models_to_try = [model] if model else _get_groq_models()
+    last_error: Exception | None = None
 
-    if not settings.gemini_api_key:
-        raise RuntimeError(
-            "Groq rate limited and GEMINI_API_KEY is not set. "
-            "Set GEMINI_API_KEY in .env for automatic fallback."
-        )
+    for groq_model in models_to_try:
+        try:
+            return _call_groq(system_prompt, user_message, groq_model, temperature)
+        except (RateLimitError, Exception) as exc:
+            status = None
+            if hasattr(exc, "status_code"):
+                status = exc.status_code
+            elif hasattr(exc, "response") and hasattr(exc.response, "status_code"):
+                status = exc.response.status_code
 
-    try:
-        return _call_gemini(system_prompt, user_message, model, temperature)
-    except Exception as exc:
-        status = getattr(exc, "response", None) and getattr(exc.response, "status_code", None)
-        detail = f" (HTTP {status})" if status else ""
-        raise RuntimeError(
-            f"Gemini fallback also failed{detail}. "
-            "Check your GEMINI_API_KEY is valid at https://aistudio.google.com/apikey"
-        ) from exc
+            if status and status not in (429, 502, 503):
+                raise
+
+            last_error = RuntimeError(
+                f"Groq model '{groq_model}' unavailable (HTTP {status})"
+                if status
+                else f"Groq model '{groq_model}' failed: {exc}"
+            )
+
+    raise RuntimeError(
+        "All Groq models exhausted. "
+        "Set GROQ_FALLBACK_MODEL and/or GROQ_FALLBACK_MODEL_2 in .env "
+        "with different model names to add fallback capacity."
+    ) from last_error

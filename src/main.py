@@ -37,7 +37,7 @@ tasks: dict[str, dict] = {}
 _lock = asyncio.Lock()
 
 
-WORKFLOW_TIMEOUT = 120
+WORKFLOW_TIMEOUT = 180
 
 
 async def run_workflow(task_id: str, query: str, research_id: int | None = None) -> None:

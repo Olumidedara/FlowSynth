@@ -6,8 +6,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
-    gemini_api_key: str = ""
-    gemini_model: str = "gemini-1.5-flash"
+    groq_fallback_model: str = ""
+    groq_fallback_model_2: str = ""
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 2880

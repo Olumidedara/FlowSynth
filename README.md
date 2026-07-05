@@ -8,7 +8,6 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![LangGraph](https://img.shields.io/badge/LangGraph-1.2+-339933?style=flat&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
 [![Groq](https://img.shields.io/badge/Groq-LLM-F97316?style=flat&logo=groq&logoColor=white)](https://groq.com)
-[![Gemini](https://img.shields.io/badge/Gemini-Fallback-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev)
 [![PostgreSQL](https://img.shields.io/badge/Neon-PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)](https://neon.tech)
 [![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?style=flat&logo=render&logoColor=white)](https://render.com)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat)](LICENSE)
@@ -95,7 +94,7 @@ The review loop runs up to **3 revision cycles**; if the critic isn't satisfied,
 ## Features
 
 - **Six AI agents** working in sequence with a quality review loop
-- **Groq** (primary) + **Gemini** (fallback) — free LLMs, no credit card
+- **Groq** with three-model fallback chain — free LLMs, no credit card
 - **DuckDuckGo search** — free, no API key
 - **Real-time progress** — see each agent work as it happens
 - **User accounts** — JWT authentication with 48h sessions
@@ -115,7 +114,7 @@ The review loop runs up to **3 revision cycles**; if the critic isn't satisfied,
 | **Framework** | [FastAPI](https://fastapi.tiangolo.com) + [Jinja2](https://jinja.palletsprojects.com) | Web server + server-side rendering |
 | **Pipeline** | [LangGraph](https://langchain-ai.github.io/langgraph/) | State graph for agent orchestration |
 | **Primary LLM** | [Groq](https://groq.com) (`llama-3.1-8b-instant`) | Fast inference at zero cost |
-| **Fallback LLM** | [Gemini](https://ai.google.dev) (`gemini-1.5-flash`) | Automatic on rate limits |
+| **Fallback LLMs** | [Groq](https://groq.com) (`llama-3.3-70b-versatile`, `gemma2-9b-it`) | Auto-fallback on rate limits |
 | **Search** | [DuckDuckGo](https://duckduckgo.com) (via `ddgs`) | Web search, no API key |
 | **Database** | [Neon](https://neon.tech) PostgreSQL via `asyncpg` | Serverless, free tier |
 | **Auth** | JWT via `pyjwt` | Password hashing with SHA-256 + salt |
@@ -149,7 +148,7 @@ GROQ_API_KEY=gsk_your_groq_key_here
 DATABASE_URL=postgresql://user:pass@ep-xxx.aws.neon.tech/neondb?sslmode=require
 ```
 
-> **Get free keys:** [Groq](https://console.groq.com) · [Gemini](https://aistudio.google.com/apikey) · [Neon](https://neon.tech)
+> **Get free keys:** [Groq](https://console.groq.com) · [Neon](https://neon.tech)
 
 ```bash
 # Run the app
@@ -167,9 +166,9 @@ All configuration is via environment variables in `.env`:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `GROQ_API_KEY` | Yes | — | Groq API key |
-| `GROQ_MODEL` | No | `llama-3.3-70b-versatile` | Groq model name |
-| `GEMINI_API_KEY` | No | — | Gemini fallback API key |
-| `GEMINI_MODEL` | No | `gemini-1.5-flash` | Gemini model name |
+| `GROQ_MODEL` | No | `llama-3.3-70b-versatile` | Primary Groq model |
+| `GROQ_FALLBACK_MODEL` | No | — | 1st fallback on rate limit |
+| `GROQ_FALLBACK_MODEL_2` | No | — | 2nd fallback on rate limit |
 | `DATABASE_URL` | Yes | — | Neon PostgreSQL connection string |
 | `JWT_SECRET` | No | auto-generated | JWT signing key |
 | `JWT_EXPIRE_MINUTES` | No | `2880` | Token lifetime (48h) |
@@ -203,7 +202,7 @@ Or manually:
 2. Choose **Web Service**
 3. Set **Build Command:** `pip install -r requirements.txt`
 4. Set **Start Command:** `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
-5. Add environment variables: `GROQ_API_KEY`, `DATABASE_URL`, `GEMINI_API_KEY` (optional)
+5. Add environment variables: `GROQ_API_KEY`, `DATABASE_URL`
 6. Pick **Free** plan → **Deploy**
 
 A `render.yaml` is also included for Blueprint-based deployment.
@@ -221,7 +220,7 @@ FlowSynth/
 │   ├── config.py               # Settings from .env
 │   ├── database.py             # asyncpg PostgreSQL layer
 │   ├── auth.py                 # JWT auth router
-│   ├── llm.py                  # Groq + Gemini abstraction
+│   ├── llm.py                  # Groq LLM abstraction (3-model fallback)
 │   ├── workflow/
 │   │   ├── graph.py            # LangGraph pipeline
 │   │   ├── state.py            # TypedDict state definition
